@@ -20,15 +20,18 @@ contract pvp_arena is Ownable {
         bool finished;
         uint256 winner;
         uint256 bet;
-        uint256 num_players;
+        uint256 numPlayers;
         //uint256[] players;
         mapping(uint256 => uint256) players;
         //mapping(uint256 => bool) player_ready;
-        uint256 ready_count;
+        uint256 readyCount;
         uint256 prize_money;
     }
 
-    event StartingMatch(uint256 matchid, uint256 num_players);
+    event NewMatch(uint256 matchId, address indexed host);
+    event JoinedMatch(uint256 matchId, uint256 tokenId);
+    event StartingMatch(uint256 matchId, uint256 numPlayers);
+    event Winner(uint256 matchId, uint256 tokenId);
 
     mapping(uint256 => Match) match_records;
     uint256 match_count;
@@ -55,56 +58,67 @@ contract pvp_arena is Ownable {
     // Utility functions
 
     // Core
-    function newMatch(uint256 _bet_amount, uint256 _num_players)
+    function newMatch(uint256 _bet_amount, uint256 _numPlayers)
         public
         payable
         returns (uint256)
     {
-        require(_bet_amount < MAX_BET);
+        require(_bet_amount < MAX_BET, "Cannot be more than 10 FTM");
         payable(owner()).transfer(ante);
         Match storage mat = match_records[match_count];
         mat.host = msg.sender;
         mat.bet = _bet_amount;
-        mat.num_players = _num_players;
-        //mat.ready_count = 0;
+        mat.numPlayers = _numPlayers;
+        //mat.readyCount = 0;
         //mat.prize_money = 0;
         match_count += 1;
+        emit NewMatch(match_count - 1, msg.sender);
         return match_count - 1;
     }
 
-    function join(uint256 match_id, uint256 id) public payable {
-        require(check_approved(id, msg.sender));
-        require(match_count > match_id);
-        Match storage mat = match_records[match_id];
-        require(msg.value >= mat.bet);
-        mat.players[mat.ready_count] = id;
-        mat.ready_count += 1;
+    function joinMatch(uint256 matchId, uint256 id) public payable {
+        require(check_approved(id, msg.sender), "Are you the owner?");
+        require(match_count > matchId, "No such match");
+
+        Match storage mat = match_records[matchId];
+        require(msg.value >= mat.bet, "Don't be cheap on the bet");
+        require(mat.finished == false, "Match is already over");
+
+        mat.players[mat.readyCount] = id;
+        mat.readyCount += 1;
         mat.prize_money += mat.bet;
+        emit JoinedMatch(matchId, id);
+
+        if (mat.numPlayers == mat.readyCount) {
+            startFight(matchId, mat);
+        }
     }
 
-    function fight(uint256 match_id) public {
-        require(match_count > match_id);
+    function fight(uint256 matchId) public {
+        require(match_count > matchId, "No such match");
         // Allow host to launch a match with fewer people
-        Match storage mat = match_records[match_id];
-        if (mat.ready_count > 1 && msg.sender == mat.host) {
-            if (mat.ready_count != mat.num_players) {
-                mat.num_players = mat.ready_count;
+        Match storage mat = match_records[matchId];
+        if (mat.readyCount > 1 && msg.sender == mat.host) {
+            if (mat.readyCount != mat.numPlayers) {
+                mat.numPlayers = mat.readyCount;
             }
-            start_fight(match_id, mat);
-        } else if (mat.ready_count == mat.num_players) {
-            start_fight(match_id, mat);
+            startFight(matchId, mat);
         } else {
             revert("Cannot start match, not enough players");
         }
     }
 
-    function start_fight(uint256 match_id, Match storage mat)
+    function startFight(uint256 matchId, Match storage mat)
         internal
         returns (uint256 winner)
     {
-        emit StartingMatch(match_id, mat.num_players);
+        require(mat.finished == false, "Match is already over");
+        emit StartingMatch(matchId, mat.numPlayers);
         uint256 seed = block.timestamp;
-        winner = ce.roll_dn(mat.num_players);
+        winner = ce.roll_dn(mat.numPlayers);
+        emit Winner(matchId, winner);
+
+        mat.finished = true;
     }
     // Turnwise fighting
     // for each, find the ability that will do the max damage

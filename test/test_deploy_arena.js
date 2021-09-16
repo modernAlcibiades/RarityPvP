@@ -28,8 +28,19 @@ describe("Arena", function () {
     expect(await arena.owner()).to.equal(deployer.address);
 
     //Create match
-    const txn = await arena.newMatch(ethers.utils.parseEther('1.0'), 3);
+    const bet = ethers.utils.parseEther('1.0');
+    const numPlayers = 3
+    const txn = await arena.newMatch(bet, numPlayers, { value: ethers.utils.parseEther('0.1') });
     const receipt = await txn.wait();
-    console.log(receipt);
+    console.log(receipt.events);
+
+    // Join match with all the tokens
+    for (let i = 0; i < numPlayers; i++) {
+      const txn1 = await arena.joinMatch(0, tokens[i], { value: bet });
+      const events = (await txn1.wait()).events;
+      console.log(events);
+    }
+    await expect(arena.joinMatch(0, tokens[numPlayers], { value: bet }))
+      .to.be.revertedWith('Match is already over');
   });
 });

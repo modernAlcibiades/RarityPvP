@@ -31,7 +31,7 @@ contract lcgRandomGenerator is Ownable {
     }
 
     function next() public returns (uint256) {
-        require(approved[msg.sender]);
+        require(approved[msg.sender], "Ask owner for approval");
         x = (a * x + c) % m;
         return x;
     }
