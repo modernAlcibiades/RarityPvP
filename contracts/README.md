@@ -1,10 +1,16 @@
-# Deployment Address
+# Contracts for PvP Arena
+
+## lcgRandomGenerator
+Random Generator designed to write on-chain. DO NOT USE IN CRITICAL APPLICATIONS.
+Idea : Updates the contract state and outputs a random number. The random number generator when used by a lot of applications can be said to be pseudo random. The miner still has some control over the random numbers, and the future values can be predicted. Still, useable for current version, until it is augmented with Chainlink VRF in future versions
+
+## combat_engine
+All the default settings for combat mechanics are in this contract. Currently, it is at version 0, only basic attacks are implemented as a POC. Skills haven't been added yet.
+
+---------------------------
+## Interfaces / library contracts from https://github.com/andrecronje/rarity
 
 > Library Contract: 0xa1364d81d86e88cfD018CCa4ac239A997dc96F31
-
-# Overview
-Below is a brief description of the three modules. All will be kept up-to-date with new rarity core releases.
-
 ## Library
 > rarity_library.sol
 
