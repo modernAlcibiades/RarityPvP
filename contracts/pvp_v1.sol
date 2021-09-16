@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "./combat_engine.sol";
 
 // Contract of each fight
-contract arena_1v1 is Ownable {
+contract pvp_arena is Ownable {
     using Strings for uint256;
     using Strings for int256;
 
