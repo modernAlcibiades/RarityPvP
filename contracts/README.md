@@ -7,6 +7,9 @@ Idea : Updates the contract state and outputs a random number. The random number
 ## combat_engine
 All the default settings for combat mechanics are in this contract. Currently, it is at version 0, only basic attacks are implemented as a POC. Skills haven't been added yet.
 
+## pvp_arena
+Arena where new matches can be created and hosted. Stores the results all previous matches. Should be updated with proper proxy contract formalism and delegate calls. Later of course.
+
 ---------------------------
 ## Interfaces / library contracts from https://github.com/andrecronje/rarity
 
