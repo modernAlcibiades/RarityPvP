@@ -21,7 +21,8 @@ contract pvp_arena is Ownable {
         uint256 winner;
         uint256 bet;
         uint256 num_players;
-        uint256[] players;
+        //uint256[] players;
+        mapping(uint256 => uint256) players;
         //mapping(uint256 => bool) player_ready;
         uint256 ready_count;
         uint256 prize_money;
@@ -45,9 +46,9 @@ contract pvp_arena is Ownable {
         view
         returns (bool)
     {
-        address owner = rarity_nft.ownerOf(id);
-        return ((owner == sender) ||
-            rarity_nft.isApprovedForAll(owner, sender) ||
+        address own = rarity_nft.ownerOf(id);
+        return ((own == sender) ||
+            rarity_nft.isApprovedForAll(own, sender) ||
             (sender == rarity_nft.getApproved(id)));
     }
 
@@ -60,26 +61,22 @@ contract pvp_arena is Ownable {
         returns (uint256)
     {
         require(_bet_amount < MAX_BET);
-        this.owner.transfer(ante);
-
-        Match mat = new Match({
-            host: msg.sender,
-            finished: false,
-            winner: 0,
-            bet: _bet_amount,
-            num_players: _num_players,
-            players: new uint256[_num_players],
-            prize_money: 0
-        });
-        match_records[match_count] = mat;
+        payable(owner()).transfer(ante);
+        Match storage mat = match_records[match_count];
+        mat.host = msg.sender;
+        mat.bet = _bet_amount;
+        mat.num_players = _num_players;
+        //mat.ready_count = 0;
+        //mat.prize_money = 0;
         match_count += 1;
+        return match_count - 1;
     }
 
     function join(uint256 match_id, uint256 id) public payable {
         require(check_approved(id, msg.sender));
         require(match_count > match_id);
         Match storage mat = match_records[match_id];
-        this.transfer(mat.bet);
+        require(msg.value >= mat.bet);
         mat.players[mat.ready_count] = id;
         mat.ready_count += 1;
         mat.prize_money += mat.bet;
@@ -87,9 +84,9 @@ contract pvp_arena is Ownable {
 
     function fight(uint256 match_id) public {
         require(match_count > match_id);
-        // Allow owner to launch a match with fewer people
+        // Allow host to launch a match with fewer people
         Match storage mat = match_records[match_id];
-        if (mat.ready_count > 1 && msg.sender == owner) {
+        if (mat.ready_count > 1 && msg.sender == mat.host) {
             if (mat.ready_count != mat.num_players) {
                 mat.num_players = mat.ready_count;
             }
@@ -106,6 +103,7 @@ contract pvp_arena is Ownable {
         returns (uint256 winner)
     {
         emit StartingMatch(match_id, mat.num_players);
+        uint256 seed = block.timestamp;
         winner = ce.roll_dn(mat.num_players);
     }
     // Turnwise fighting

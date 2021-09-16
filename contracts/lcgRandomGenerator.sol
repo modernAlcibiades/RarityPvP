@@ -21,11 +21,11 @@ contract lcgRandomGenerator is Ownable {
         uint256 _c,
         uint256 _seed
     ) {
-        require(_a > _m && _a < _m && _c < _m);
+        require(_a < _m && _c < _m);
         a = _a;
         c = _c;
         m = _m;
-        x = _seed;
+        x = _seed % m;
         // Approve owner
         approved[msg.sender] = true;
     }

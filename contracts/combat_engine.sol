@@ -121,37 +121,32 @@ contract combat_engine {
 
     // Calculate attributes
     function attackModifierByClass(
-        uint256 class,
+        Classes class,
         uint256 level,
         rl._ability_scores memory attr
-    ) internal view returns (uint256 val) {
+    ) internal pure returns (uint256 val) {
         if (class == Classes.Barbarian) {
             val = attr._str / 2;
         } else if (class == Classes.Bard) {
-            val = (attr._cha + attr._str) / 4;
+            val = (attr._cha + attr._str + attr._wis) / 6;
         } else if (class == Classes.Cleric) {
             val = (attr._int + attr._con) / 4;
         } else if (class == Classes.Druid) {
             val = (attr._wis + attr._str) / 4;
         } else if (class == Classes.Fighter) {
-            val = (attr._str + attr._con) / 4;
+            val = (attr._dex + attr._con) / 4;
         } else if (class == Classes.Monk) {
             val = (attr._str + attr._int) / 4;
-        } else if (class == 7) {
-            // Barbarian
-            val = 1 + attr._str / 2;
-        } else if (class == 8) {
-            // Barbarian
-            val = 1 + attr._str / 2;
-        } else if (class == 9) {
-            // Barbarian
-            val = 1 + attr._str / 2;
-        } else if (class == 10) {
-            // Barbarian
-            val = 1 + attr._str / 2;
-        } else if (class == 11) {
-            // Barbarian
-            val = 1 + attr._str / 2;
+        } else if (class == Classes.Paladin) {
+            val = (attr._str + attr._con + attr._int) / 6;
+        } else if (class == Classes.Ranger) {
+            val = attr._dex / 2;
+        } else if (class == Classes.Rouge) {
+            val = (attr._str + attr._dex) / 4;
+        } else if (class == Classes.Sorcerer) {
+            val = (attr._cha + attr._int) / 4;
+        } else if (class == Classes.Wizard) {
+            val = attr._int / 2;
         }
         val += level;
     }
@@ -159,12 +154,17 @@ contract combat_engine {
     // Combat actions
     // get modifiers based on class
 
-    function basicAttack(Player memory p) public returns (uint32) {
+    function basicAttack(Player memory p) public pure returns (uint32) {
         return 0;
     }
 
-    function takeDamage(Player p, uint32 damage) {
+    function takeDamage(Player memory p, uint32 damage)
+        public
+        pure
+        returns (uint256)
+    {
         //
+        return 0;
     }
 
     function skillRoll(Player memory p, AbilityCheck a)
@@ -172,8 +172,10 @@ contract combat_engine {
         returns (uint256 val)
     {
         // _str modifier
-        uint256 roll = roll_dn(20);
-        val = roll + p.modifiers[check_type[uint8(a)]] + p.abilities[uint8(a)];
+        val =
+            roll_dn(20) +
+            p.modifiers[check_type[uint8(a)]] +
+            p.abilities[uint8(a)];
     }
 
     function skillCheck(
